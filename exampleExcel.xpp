@@ -1,0 +1,218 @@
+public static void exampleExcel()
+{
+    #define.BORDER_LEFT         (1)
+    #define.BORDER_RIGHT        (2)
+    #define.BORDER_TOP          (3)
+    #define.BORDER_BOTTOM       (4)
+    #define.LINE_SOLID          (7)
+    #define.FONT_BOLD           (4)
+    #define.FONT_ITALIC         (4)
+    #define.FORMAT_CURRENCY     ('# ##0,00 zł')
+    #define.FORMAT_DATE         ('rrrr-mm-dd')
+    #define.FORMAT_TEXT         ('@')
+    #define.ALIGN_LEFT          (-4131)
+    #define.ALIGN_RIGHT         (-4152)
+
+    #localMacro.COLOR_LT_BLUE   (WinAPI::RGB2int(128, 192, 255))                            #endMacro
+    #localMacro.COLOR_LT_GREY   (WinAPI::RGB2int(240, 240, 240))                            #endMacro
+    #localMacro.EXCEL_ADDR      (subStr('ABCDEFGHIJKLMNOPQRSTUVWXYZ', %1, 1) + int2str(%2)) #endMacro
+
+    PPLContract PPLContract;
+
+    SysExcelApplication excelApp;
+    SysExcelWorkbooks   workbooks;
+    SysExcelWorkbook    workbook;
+    SysExcelWorksheets  worksheets;
+    SysExcelWorksheet   worksheet;
+    SysExcelCells       cells;
+    SysExcelStyle       style;
+    COM                 rangeCOM;
+    COM                 bordersCOM;
+    COM                 borderCOM;
+
+    Map             records;
+    MapEnumerator   recordsEnumerator;
+    DictField       dictField;
+
+    Query                   query;
+    QueryRun                queryRun;
+    QueryBuildDataSource    qbds;
+    QueryBuildRange         qbr;
+
+    PPLDate dateValidFrom;
+    PPLDate dateValidTo;
+
+    str     cellsAddrRange;
+    int     i;
+    int     rows;
+    int     cols;
+    anytype fieldType;
+    str     fieldName;
+
+
+    records = new Map(Types::String, Types::Record);
+
+    dateValidFrom   = mkDate(01, 01, 1901); //#DATE_NULL;
+    dateValidTo     = mkDate(01, 01, 2153); //#DATE_MAX;
+
+    query   = new Query();
+
+    query.validTimeStateDateRange(01\01\2000, 31\12\2020);
+
+    qbds    = query.addDataSource(tableNum(PPLContract));
+    qbds.addSelectionField(fieldNum(PPLContract, EmplId));
+    qbds.addSelectionField(fieldNum(PPLContract, ContractNum));
+    qbds.addSelectionField(fieldNum(PPLContract, ValidFrom));
+    qbds.addSelectionField(fieldNum(PPLContract, ValidTo));
+    qbds.addSelectionField(fieldNum(PPLContract, RateBase));
+    qbds.addSelectionField(fieldNum(PPLContract, PositionName));
+    qbr     = qbds.addRange(fieldNum(PPLContract, EmplId));
+    qbr.value('KS*');
+
+    queryRun = new QueryRun(query);
+
+    while (queryRun.next())
+    {
+        PPLContract = queryRun.get(tableNum(PPLContract));
+        records.insert(PPLContract.EmplId, PPLContract);
+    }
+
+    rows = records.elements() + 1;
+    cols = qbds.fields().fieldCount();
+
+    excelApp    = SysExcelApplication::construct();
+    workbooks   = excelApp.workbooks();
+    workbook    = workbooks.add();
+    worksheets  = workbook.worksheets();
+    worksheet   = worksheets.itemFromNum(1);
+    cells       = worksheet.cells();
+
+    // formatowanie - style
+    cellsAddrRange = strFmt('%1:%2', #EXCEL_ADDR(1, 1), #EXCEL_ADDR(cols, 1));
+    style = workbook.styles().add('HeaderStyle');
+    style.font().bold(#FONT_BOLD);
+    style.interior().color(#COLOR_LT_BLUE);
+    cells.range(cellsAddrRange).style('HeaderStyle');
+
+    cellsAddrRange = strFmt('%1:%2', #EXCEL_ADDR(1, 2), #EXCEL_ADDR(cols, rows));
+    style = workbook.styles().add('BodyStyle');
+    style.font().italic(#FONT_ITALIC);
+    style.interior().color(#COLOR_LT_GREY);
+    cells.range(cellsAddrRange).style('BodyStyle');
+
+    // naglówek
+    cellsAddrRange = strFmt('%1:%2', #EXCEL_ADDR(1, 1), #EXCEL_ADDR(cols, 1));
+    rangeCOM = cells.range(cellsAddrRange).comObject();
+    rangeCOM.columnWidth(20);
+    bordersCOM = rangeCOM.borders();
+    borderCOM = bordersCOM.item(#BORDER_LEFT);
+    borderCOM.lineStyle(#LINE_SOLID);
+    borderCOM.Weight(3);
+    borderCOM = bordersCOM.item(#BORDER_RIGHT);
+    borderCOM.lineStyle(#LINE_SOLID);
+    borderCOM.Weight(3);
+    borderCOM = bordersCOM.item(#BORDER_TOP);
+    borderCOM.lineStyle(#LINE_SOLID);
+    borderCOM.Weight(3);
+    borderCOM = bordersCOM.item(#BORDER_BOTTOM);
+    borderCOM.lineStyle(#LINE_SOLID);
+    borderCOM.Weight(3);
+
+    // rekordy
+    cellsAddrRange = strFmt('%1:%2', #EXCEL_ADDR(1, 2), #EXCEL_ADDR(cols, rows));
+    rangeCOM = cells.range(cellsAddrRange).comObject();
+    rangeCOM.columnWidth(20);
+    bordersCOM = rangeCOM.borders();
+    borderCOM = bordersCOM.item(#BORDER_LEFT);
+    borderCOM.lineStyle(#LINE_SOLID);
+    borderCOM = bordersCOM.item(#BORDER_RIGHT);
+    borderCOM.lineStyle(#LINE_SOLID);
+    borderCOM = bordersCOM.item(#BORDER_TOP);
+    borderCOM.lineStyle(#LINE_SOLID);
+    borderCOM = bordersCOM.item(#BORDER_BOTTOM);
+    borderCOM.lineStyle(#LINE_SOLID);
+
+    cells.item(1, 1).value('ID');
+    cells.item(1, 2).value('Numer umowy');
+    cells.item(1, 3).value('Od');
+    cells.item(1, 4).value('Do');
+    cells.item(1, 5).value('Stawka');
+
+    // format kolumn
+    for (i = 1; i <= cols; i++)
+    {
+        dictField   = new DictField(qbds.table(), qbds.fields().field(i));
+        fieldType   = dictField.baseType();
+        fieldName   = dictField.label();
+
+        cells.item(1, i).value(fieldName);
+
+        cellsAddrRange  = strFmt('%1:%2', #EXCEL_ADDR(i, 2), #EXCEL_ADDR(i, rows));
+        rangeCOM        = cells.range(cellsAddrRange).comObject();
+
+        switch (fieldType)
+        {
+            case Types::Integer:
+                rangeCOM.horizontalAlignment(#ALIGN_RIGHT);
+                cells.range(#EXCEL_ADDR(i, 1) + ':' + #EXCEL_ADDR(i, 1)).horizontalAlignment(#ALIGN_RIGHT); // pole naglówka
+                break;
+
+            case Types::String:
+                rangeCOM.horizontalAlignment(#ALIGN_LEFT);
+                rangeCOM.numberFormat(#FORMAT_TEXT);
+                cells.range(#EXCEL_ADDR(i, 1) + ':' + #EXCEL_ADDR(i, 1)).horizontalAlignment(#ALIGN_LEFT); // pole naglówka
+                break;
+
+            case Types::Real:
+                rangeCOM.horizontalAlignment(#ALIGN_RIGHT);
+                rangeCOM.numberFormat(#FORMAT_CURRENCY);
+                cells.range(#EXCEL_ADDR(i, 1) + ':' + #EXCEL_ADDR(i, 1)).horizontalAlignment(#ALIGN_RIGHT); // pole naglówka
+                break;
+
+            case Types::Date:
+            case Types::UtcDateTime:
+                rangeCOM.horizontalAlignment(#ALIGN_RIGHT);
+                rangeCOM.numberFormat(#FORMAT_DATE);
+                cells.range(#EXCEL_ADDR(i, 1) + ':' + #EXCEL_ADDR(i, 1)).horizontalAlignment(#ALIGN_RIGHT); // pole naglówka
+                break;
+        } //switch
+    } //for
+
+    recordsEnumerator = records.getEnumerator();
+    rows = 2;
+
+    // zapis danych
+    while (recordsEnumerator.moveNext())
+    {
+        PPLContract = recordsEnumerator.currentValue();
+
+        for (i = 1; i <= cols; i++)
+        {
+            cells.item(rows, i).value(PPLContract.getFieldValue(new DictField(qbds.table(), qbds.fields().field(i)).name()));
+        }
+
+        rows++;
+    } //while
+
+    excelApp.visible(true);
+
+    excelApp.quit();
+}
+
+
+
+
+
+/*
+{
+    // odczyt danych z excela
+    cell = cells.item(1, 1);
+    number = real2int(cell.value().double());
+    cell = cells.item(2, 1);
+    numberReal = cell.value().double();
+    cell = cells.item(3, 1);
+    text = cell.value().bStr();
+    cell = cells.item(4, 1);
+    dateValue = cell.value().date();
+}
+*/
