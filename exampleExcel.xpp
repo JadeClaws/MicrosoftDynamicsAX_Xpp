@@ -132,12 +132,6 @@ public static void exampleExcel()
     borderCOM = bordersCOM.item(#BORDER_BOTTOM);
     borderCOM.lineStyle(#LINE_SOLID);
 
-    cells.item(1, 1).value('ID');
-    cells.item(1, 2).value('Numer umowy');
-    cells.item(1, 3).value('Od');
-    cells.item(1, 4).value('Do');
-    cells.item(1, 5).value('Stawka');
-
     // format kolumn
     for (i = 1; i <= cols; i++)
     {
