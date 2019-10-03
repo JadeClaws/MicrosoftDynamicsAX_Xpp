@@ -1,0 +1,31 @@
+public static str changeStrLen(str _text, int _length, str _charToFill = ' ', boolean _fillBeforeBaseText = false)
+{
+    str result = _text;
+
+
+    if (_length <= 0)
+        throw error('changeStrLen_error: \'_length\' must be a positive value');
+
+    if (strLen(_charToFill) != 1)
+        throw error('changeStrLen_error: \'_charToFill\' must be a single character');
+
+
+
+
+    if (strLen(_text) > _length)
+    {
+        result = strDel(_text, _length + 1, strLen(_text));
+    }
+    else
+    {
+        while (strLen(result) < _length)
+        {
+            if (_fillBeforeBaseText)
+                result = _charToFill + result;
+            else
+                result = result + _charToFill;
+        }
+    }
+
+    return result;
+}
