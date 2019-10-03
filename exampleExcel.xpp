@@ -7,7 +7,7 @@ public static void exampleExcel()
     #define.LINE_SOLID          (7)
     #define.FONT_BOLD           (4)
     #define.FONT_ITALIC         (4)
-    #define.FORMAT_CURRENCY     ('# ##0,00 $')
+    #define.FORMAT_CURRENCY     ('# ### ##0,00$')
     #define.FORMAT_DATE         ('rrrr-mm-dd')
     #define.FORMAT_TEXT         ('@')
     #define.ALIGN_LEFT          (-4131)
@@ -52,18 +52,18 @@ public static void exampleExcel()
 
     records = new Map(Types::String, Types::Record);
 
-    dateValidFrom   = mkDate(01, 01, 1901); //#DATE_NULL;
-    dateValidTo     = mkDate(01, 01, 2153); //#DATE_MAX;
+    dateValidFrom   = 01\01\2000;
+    dateValidTo     = 31\12\2020;
 
     query   = new Query();
 
-    query.validTimeStateDateRange(01\01\2000, 31\12\2020);
+    query.validTimeStateDateRange(dateValidFrom, dateValidTo);
 
     qbds    = query.addDataSource(tableNum(CustTable));
     qbds.addSelectionField(fieldNum(CustTable, AccountNum));
     qbds.addSelectionField(fieldNum(CustTable, CustGroup));
     qbds.addSelectionField(fieldNum(CustTable, BirthDate_IT));
-    qbds.addSelectionField(fieldNum(CustTable, CreditRating));
+    qbds.addSelectionField(fieldNum(CustTable, AccountStatement));
     qbds.addSelectionField(fieldNum(CustTable, CreditMax));
     qbds.addSelectionField(fieldNum(CustTable, Currency));
     qbr     = qbds.addRange(fieldNum(CustTable, AccountNum));
@@ -175,6 +175,11 @@ public static void exampleExcel()
                 rangeCOM.numberFormat(#FORMAT_DATE);
                 cells.range(#EXCEL_ADDR(i, 1) + ':' + #EXCEL_ADDR(i, 1)).horizontalAlignment(#ALIGN_RIGHT); // pole naglówka
                 break;
+                
+            case Types::Enum:
+                rangeCOM.horizontalAlignment(#ALIGN_LEFT);
+                cells.range(#EXCEL_ADDR(i, 1) + ':' + #EXCEL_ADDR(i, 1)).horizontalAlignment(#ALIGN_RIGHT); // pole naglówka
+                break;
         } //switch
     } //for
 
@@ -185,10 +190,21 @@ public static void exampleExcel()
     while (recordsEnumerator.moveNext())
     {
         CustTable = recordsEnumerator.currentValue();
-
+        
         for (i = 1; i <= cols; i++)
         {
-            cells.item(rows, i).value(CustTable.getFieldValue(new DictField(qbds.table(), qbds.fields().field(i)).name()));
+            dictField = new DictField(qbds.table(), qbds.fields().field(i));
+            fieldType = dictField.baseType();
+            
+            switch (fieldType)
+            {
+                case Types::Enum:
+                    cells.item(rows, i).value(enum2str(CustTable.getFieldValue(dictField.name())));
+                    break;
+                    
+                default:
+                    cells.item(rows, i).value(CustTable.getFieldValue(dictField.name()));
+            }     
         }
 
         rows++;
@@ -198,10 +214,6 @@ public static void exampleExcel()
 
     excelApp.quit();
 }
-
-
-
-
 
 /*
 {
