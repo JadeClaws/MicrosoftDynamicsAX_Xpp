@@ -1,0 +1,135 @@
+/// <summary>
+///     prints formatted table to infolog
+/// </summary>
+///
+/// <param name="_table">
+///     table to print
+/// </param>
+///
+/// <param name="_fieldsNames">
+///     container with names of fields to print
+/// </param>
+///
+/// <param name="_columnWidthInChars">
+///     width of each column
+/// </param>
+///
+/// <remarks>
+///     KS
+/// </remarks>
+public static void printTableInInfolog(Common _table, container _fieldsNames, int _columnWidthInChars = 20)
+{
+    #define.FIRST_COLUMN_WIDTH(8)
+
+    DictField   field;
+
+    Query                   query;
+    QueryRun                queryRun;
+    QueryBuildDataSource    qbds;
+
+    Counter i;
+    Counter j;
+    int     fieldsNo;   // liczba pól w kontenerze
+    str     fieldName;  // nazwa pola
+    str     header;     // naglowek wyswietlanej zawartosci
+    str     record;     // wyswietlany rekord (przetworzony)
+
+
+    fieldsNo = conLen(_fieldsNames);
+
+    header = KS::changeStrLen('#', #FIRST_COLUMN_WIDTH);
+
+    query = new Query();
+    qbds = query.addDataSource(_table.TableId);
+
+    // wyswietlenie calej tabeli lub tylko przekazanych rekordów
+    if (_table.RecId == 0) // brak przekazanych rekordów -> wyswietlenie calej tabeli
+    {
+        // utworzenie listy pól dla query na podstawie parametru
+        for (i = 1; i <= fieldsNo; i++)
+        {
+            fieldName = conPeek(_fieldsNames, i);
+            field = new DictField(_table.TableId, fieldName2id(_table.TableId, fieldName));
+
+            if (field)
+            {
+                qbds.addSelectionField(field.id()); // dodanie pola do query
+
+                header += KS::changeStrLen(fieldName, _columnWidthInChars); // dodanie pola do naglowka
+            }
+            else
+            {
+                throw warning(strFmt('Nie znaleziono pola (%1) w tabeli (%2).', fieldName, tableId2name(_table.TableId)));
+            }
+        }
+
+        queryRun = new QueryRun(query);
+
+        i = 0;
+
+        // WYSWIETLENIE DANYCH
+
+        info(strFmt('%1', header));
+        info(strFmt('%1', KS::changeStrLen('', strLen(header), '-')));
+
+        while (queryRun.next())
+        {
+            i++;
+
+            _table = queryRun.get(_table.TableId);
+
+            record = '';
+            record += KS::changeStrLen(strFmt('%1', i), #FIRST_COLUMN_WIDTH);
+
+            for (j = 1; j <= fieldsNo; j++)
+            {
+                fieldName = conPeek(_fieldsNames, j);
+                record += KS::changeStrLen(_table.(fieldName2id(_table.TableId, fieldName)), _columnWidthInChars);
+            }
+
+            info(strFmt('%1', record));
+        }
+    }
+    else // wyswietlenie tylko przekazanych rekordów
+    {
+        for (i = 1; i <= fieldsNo; i++)
+        {
+            fieldName = conPeek(_fieldsNames, i);
+            field = new DictField(_table.TableId, fieldName2id(_table.TableId, fieldName));
+
+            if (field)
+            {
+                header += KS::changeStrLen(fieldName, _columnWidthInChars); // dodanie pola do naglowka
+            }
+            else
+            {
+                throw warning(strFmt('Nie znaleziono pola (%1) w tabeli (%2).', fieldName, tableId2name(_table.TableId)));
+            }
+        }
+
+        i = 0;
+
+        // WYSWIETLENIE DANYCH
+
+        info(strFmt('%1', header));
+        info(strFmt('%1', KS::changeStrLen('', strLen(header), '-')));
+
+        while (_table)
+        {
+            i++;
+
+            record = '';
+            record += KS::changeStrLen(strFmt('%1', i), #FIRST_COLUMN_WIDTH);
+
+            for (j = 1; j <= fieldsNo; j++)
+            {
+                fieldName = conPeek(_fieldsNames, j);
+                record += KS::changeStrLen(_table.(fieldName2id(_table.TableId, fieldName)), _columnWidthInChars);
+            }
+
+            info(strFmt('%1', record));
+
+            next _table;
+        }
+    }
+}
