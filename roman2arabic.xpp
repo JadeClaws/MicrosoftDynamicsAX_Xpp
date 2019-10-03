@@ -1,0 +1,156 @@
+public static int roman2arabic(str _roman) {
+    int arabic;
+    int i;
+    int length;
+    int repeatCounter;
+    str c;
+    str prevC;
+    str nextC;
+
+
+    length = strLen(_roman);
+    arabic = 0;
+    i = 0;
+    repeatCounter = 1;
+
+    if (_roman == '') throw info('arabska: ');
+
+    while (i < length)
+    {
+        c       = strDel(_roman, 2, strLen(_roman) - 1);
+        _roman  = strDel(_roman, 1, 1);
+
+        i++;
+
+        nextC = strDel(_roman, 2, strLen(_roman) - 1);
+
+        if (c == prevC)
+            repeatCounter++;
+        else
+            repeatCounter = 1;
+
+        if(nextC != '')
+        {
+            switch(prevC)
+            {
+                case 'I':
+                    if (nextC != 'I')
+                        throw error('Podana liczba rzymska jest niepoprawna');
+
+                case 'V':
+                    if (nextC != 'V' && nextC != 'I')
+                        throw error('Podana liczba rzymska jest niepoprawna');
+
+                case 'X':
+                    if (nextC != 'X' && nextC != 'V' && nextC != 'I')
+                            throw error('Podana liczba rzymska jest niepoprawna');
+
+                case 'L':
+                    if (nextC != 'L' && nextC != 'X' && nextC != 'V' && nextC != 'I')
+                            throw error('Podana liczba rzymska jest niepoprawna');
+
+                case 'C':
+                    if (nextC == 'D' || nextC == 'M')
+                            throw error('Podana liczba rzymska jest niepoprawna');
+
+                case 'D':
+                    if (nextC == 'D' || nextC == 'M')
+                        throw error('Podana liczba rzymska jest niepoprawna');
+            }
+        }
+
+        switch (c)
+        {
+            case 'I':
+                if (repeatCounter > 3)
+                    throw error('Podana liczba rzymska jest niepoprawna');
+
+                arabic += 1;
+                break;
+
+            case 'V':
+                if (prevC == 'I' && nextC != '')
+                    throw error('Podana liczba rzymska jest niepoprawna');
+                if (repeatCounter > 1)
+                    throw error('Podana liczba rzymska jest niepoprawna');
+
+                if (prevC == 'I')
+                    arabic += 3;
+                else
+                    arabic += 5;
+                break;
+
+            case 'X':
+                if (prevC == 'I' && nextC != '')
+                    throw error('Podana liczba rzymska jest niepoprawna');
+
+                if (prevC == 'V' || repeatCounter > 3)
+                    throw error('Podana liczba rzymska jest niepoprawna');
+
+                if (prevC == 'I')
+                    arabic += 8;
+                else
+                    arabic += 10;
+                break;
+
+            case 'L':
+                if (prevC == 'X' && (nextC == 'X' || nextC == 'C' || nextC == 'D' || nextC == 'M'))
+                    throw error('Podana liczba rzymska jest niepoprawna');
+
+                if (prevC == 'I' || prevC == 'V' || repeatCounter > 1)
+                    throw error('Podana liczba rzymska jest niepoprawna');
+
+                if (prevC == 'X')
+                    arabic += 30;
+                else
+                    arabic += 50;
+                break;
+
+            case 'C':
+                if (prevC == 'X' && (nextC == 'X' || nextC == 'C' || nextC == 'D' || nextC == 'M'))
+                    throw error('Podana liczba rzymska jest niepoprawna');
+
+                if (prevC == 'L' || prevC == 'V' || prevC == 'I' || repeatCounter > 3)
+                    throw error('Podana liczba rzymska jest niepoprawna');
+
+                if (prevC == 'X')
+                    arabic += 80;
+                else
+                    arabic += 100;
+                break;
+
+            case 'D':
+                if (prevC == 'C' && (nextC == 'C' || nextC == 'D' || nextC == 'M'))
+                    throw error('Podana liczba rzymska jest niepoprawna');
+
+                if (prevC == 'L' || prevC == 'X' || prevC == 'V' || prevC == 'I' || repeatCounter > 1)
+                    throw error('Podana liczba rzymska jest niepoprawna');
+
+                if (prevC == 'C')
+                    arabic += 300;
+                else
+                    arabic += 500;
+                break;
+
+            case 'M':
+                if (prevC == 'C' && (nextC == 'C' || nextC == 'D'))
+                    throw error('Podana liczba rzymska jest niepoprawna');
+
+                if (prevC == 'D' || prevC == 'L' || prevC == 'X' || prevC == 'V' || prevC == 'I')
+                    throw error('Podana liczba rzymska jest niepoprawna');
+
+                if (prevC == 'C')
+                    arabic += 800;
+                else
+                    arabic += 1000;
+                break;
+
+            default:
+                throw error('Podana liczba rzymska jest niepoprawna');
+        } //switch
+
+        prevC = c;
+    }
+
+    return arabic;
+}
