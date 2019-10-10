@@ -1,0 +1,37 @@
+public static str generateString(int _length, boolean _containsLetters, boolean _containsNumbers, boolean _containsSpecial)
+{
+    #define.LETTERS ('abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ')
+    #define.NUMBERS ('0123456789')
+    #define.SPECIAL ('`~!@#$%^&*\[]{}\\|:;"\'<>,./?_-+=')
+
+    Random rand;
+
+    str characters;
+    str result;
+    int randomNumber;
+    int i;
+
+
+    rand = new Random();
+
+    characters  = '';
+    result      = '';
+
+    if (_containsLetters) characters += #LETTERS;
+    if (_containsNumbers) characters += #NUMBERS;
+    if (_containsSpecial) characters += #SPECIAL;
+
+    if (strLen(characters) == 0)
+    {
+        return result;
+    }
+
+    for (i = 1; i < _length; i++)
+    {
+        randomNumber = (rand.nextInt() mod strLen(characters)) + 1;
+
+        result += subStr(characters, randomNumber, 1);
+    }
+
+    return result;
+}
